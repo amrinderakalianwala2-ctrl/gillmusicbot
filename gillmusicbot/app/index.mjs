@@ -88788,6 +88788,7 @@ async function setVcStatus(client, guildId, voiceChannelId, song) {
   }
 }
 async function createQueue(guild, voiceChannel, textChannel, client) {
+  console.log('[GillBot] createQueue: joining voice channel', voiceChannel.id, 'in guild', guild.id);
   const connection = joinVoiceChannel({
     channelId: voiceChannel.id,
     guildId: guild.id,
@@ -88795,11 +88796,18 @@ async function createQueue(guild, voiceChannel, textChannel, client) {
     selfDeaf: true,
     selfMute: false
   });
+  connection.on('stateChange', (oldState, newState) => {
+    console.log('[GillBot] voice connection state:', oldState.status, '->', newState.status);
+  });
+  connection.on('error', (err) => {
+    console.error('[GillBot] voice connection error:', err.message);
+  });
   const player = createAudioPlayer();
   connection.subscribe(player);
-  await entersState(connection, VoiceConnectionStatus.Ready, 3e4).catch(() => {
+  await entersState(connection, VoiceConnectionStatus.Ready, 15e3).catch((err) => {
+    console.error('[GillBot] createQueue: timed out waiting for Ready. Last state:', connection.state.status, err?.message);
     connection.destroy();
-    throw new Error("Could not join voice channel within 30 seconds.");
+    throw new Error("Could not join voice channel within 15 seconds.");
   });
   const settings = guildSettings.get(guild.id);
   const queue2 = {
