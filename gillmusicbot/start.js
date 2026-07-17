@@ -79,28 +79,50 @@ if (!process.env.DISCORD_CLIENT_ID) {
   console.warn("[GillBot] WARNING: ffmpeg not found — audio playback will fail.");
 })();
 
-// ── 4. Check & update yt-dlp ────────────────────────────────────────────────
+// ── 4. Check & auto-download yt-dlp if missing ──────────────────────────────
 (function checkYtdlp() {
-  const ytdlpBin = process.env.YTDLP_PATH || "yt-dlp";
-  try {
-    const ver = execFileSync(ytdlpBin, ["--version"], { encoding: "utf8" }).trim();
-    console.log("[GillBot] yt-dlp found:", ver);
-  } catch (e) {
-    console.error("[GillBot] CRITICAL: yt-dlp not found!", e.message);
-    console.error("  → Railway/Render: make sure yt-dlp is in nixpacks.toml or installed via pip.");
-    console.error("  → Local: run  pip install yt-dlp  or  pip3 install yt-dlp");
-    process.exit(1); // bot cannot play music without yt-dlp
-  }
+  const localBin = path.join(__dirname, "yt-dlp");
+  const ytdlpBin = process.env.YTDLP_PATH || localBin;
 
-  // Auto-update yt-dlp so YouTube doesn't break it
-  if (process.env.YTDLP_SKIP_UPDATE !== "true") {
+  function tryRun(bin) {
     try {
-      console.log("[GillBot] Updating yt-dlp (set YTDLP_SKIP_UPDATE=true to skip)...");
-      execSync(`${ytdlpBin} -U`, { stdio: "inherit", timeout: 60000 });
+      const ver = execFileSync(bin, ["--version"], { encoding: "utf8" }).trim();
+      console.log("[GillBot] yt-dlp found:", ver, "at", bin);
+      process.env.YTDLP_PATH = bin;
+      return true;
     } catch (_) {
-      console.warn("[GillBot] yt-dlp update skipped (non-fatal).");
+      return false;
     }
   }
+
+  // 1. Try configured/local path first
+  if (tryRun(ytdlpBin)) {
+    return;
+  }
+
+  // 2. Try system yt-dlp
+  if (tryRun("yt-dlp")) {
+    process.env.YTDLP_PATH = "yt-dlp";
+    return;
+  }
+
+  // 3. Auto-download yt-dlp binary from GitHub
+  console.log("[GillBot] yt-dlp not found — downloading binary from GitHub...");
+  try {
+    execSync(
+      `curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o "${localBin}" && chmod +x "${localBin}"`,
+      { stdio: "inherit", timeout: 60000 }
+    );
+    if (tryRun(localBin)) {
+      console.log("[GillBot] yt-dlp downloaded successfully.");
+      return;
+    }
+  } catch (e) {
+    console.error("[GillBot] Failed to download yt-dlp:", e.message);
+  }
+
+  console.error("[GillBot] CRITICAL: Could not find or download yt-dlp. Music will not work.");
+  process.exit(1);
 })();
 
 // ── 5. Write cookies.txt for yt-dlp (YouTube rate-limit fix) ────────────────

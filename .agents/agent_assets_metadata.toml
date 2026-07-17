@@ -12,3 +12,9 @@ id = "jsaTCNX6pGY5O16JORvzM"
 uri = "file://gillmusicbot-upload.zip"
 type = "unspecified"
 title = "GillBot — Upload this to bot-hosting.net"
+
+[[outputs]]
+id = "RZkzWBln9oU3MJyA5W0ES"
+uri = "file://gillmusicbot-startjs.zip"
+type = "unspecified"
+title = "start.js — replace this file on bot-hosting.net"
