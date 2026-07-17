@@ -88113,8 +88113,7 @@ async function getStream(url) {
     }, 20000);
     _proc.stderr.on('data', (d) => {
       const msg = d.toString().trim();
-      stderr += msg + '
-';
+      stderr += msg + '\n';
       console.error('[GillBot] yt-dlp:', msg);
     });
     _proc.on('error', (e) => {
