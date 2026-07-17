@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: gillmusicbot
+    runtime: node
+    buildCommand: npm install && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp && chmod +x yt-dlp
+    startCommand: node start.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: YTDLP_PATH
+        value: ./yt-dlp
+      - key: YTDLP_SKIP_UPDATE
+        value: "true"
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: YOUTUBE_COOKIES_TXT
+        sync: false
