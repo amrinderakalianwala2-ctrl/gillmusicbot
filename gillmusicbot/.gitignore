@@ -1,0 +1,5 @@
+.env
+cookies.txt
+node_modules/
+*.log
+data/

@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "6v7873IgBNdx8Sl7kfSwv"
+uri = "file://gillmusicbot-fixed.zip"
+type = "unspecified"
+title = "GillBot Fixed — Download Here"
