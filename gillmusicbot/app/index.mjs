@@ -88908,7 +88908,9 @@ async function playSong(queue2, client) {
   void postLyrics(queue2.guildId, song.title, song.url, song.thumbnail, client).catch(() => {
   });
   try {
+    console.log('[GillBot] playSong: fetching stream for', song.url);
     const stream2 = await getStream(song.url);
+    console.log('[GillBot] playSong: stream received, creating audio resource');
     const resource = createAudioResource(stream2.stream, {
       inputType: stream2.type,
       inlineVolume: true
@@ -88918,10 +88920,20 @@ async function playSong(queue2, client) {
     queue2.startedAt = Date.now();
     queue2.paused = false;
     queue2.player.play(resource);
+    console.log('[GillBot] playSong: player.play() called successfully');
     await setVcStatus(client, queue2.guildId, queue2.voiceChannelId, song);
     await updatePanel(queue2, client, false);
   } catch (err) {
+    const errMsg = err?.message ?? String(err);
+    console.error('[GillBot] playSong ERROR:', errMsg);
     logger.error({ err }, "[player] Failed to play song");
+    // Send visible error to Discord text channel
+    try {
+      const textCh = queue2.textChannel;
+      if (textCh?.isTextBased()) {
+        await textCh.send({ content: `❌ **Failed to play:** ${song.title}\n\`\`\`${errMsg.slice(0, 300)}\`\`\`` });
+      }
+    } catch (_) {}
     const next = queue2.currentIndex + 1;
     if (next < queue2.songs.length) {
       queue2.currentIndex = next;
