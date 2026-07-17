@@ -6,3 +6,9 @@ id = "6v7873IgBNdx8Sl7kfSwv"
 uri = "file://gillmusicbot-fixed.zip"
 type = "unspecified"
 title = "GillBot Fixed — Download Here"
+
+[[outputs]]
+id = "jsaTCNX6pGY5O16JORvzM"
+uri = "file://gillmusicbot-upload.zip"
+type = "unspecified"
+title = "GillBot — Upload this to bot-hosting.net"
