@@ -88831,10 +88831,13 @@ async function createQueue(guild, voiceChannel, textChannel, client) {
   connection.on(VoiceConnectionStatus.Disconnected, async () => {
     try {
       await Promise.race([
-        entersState(connection, VoiceConnectionStatus.Signalling, 5e3),
-        entersState(connection, VoiceConnectionStatus.Connecting, 5e3)
+        entersState(connection, VoiceConnectionStatus.Signalling, 15e3),
+        entersState(connection, VoiceConnectionStatus.Connecting, 15e3)
       ]);
+      // Reconnection in progress — wait up to 30s for it to fully recover
+      await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
     } catch {
+      connection.destroy();
       destroyQueue(guild.id, client);
     }
   });
@@ -88927,6 +88930,11 @@ async function playSong(queue2, client) {
     queue2.resource = resource;
     queue2.startedAt = Date.now();
     queue2.paused = false;
+    // Guard: don't try to play on a destroyed connection
+    if (queue2.connection.state.status === VoiceConnectionStatus.Destroyed) {
+      console.error('[GillBot] playSong: connection was destroyed before playback — aborting.');
+      throw new Error('Voice connection was destroyed while loading audio. Please run the command again.');
+    }
     queue2.player.play(resource);
     console.log('[GillBot] playSong: player.play() called successfully');
     await setVcStatus(client, queue2.guildId, queue2.voiceChannelId, song);
